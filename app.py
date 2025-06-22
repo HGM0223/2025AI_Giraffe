@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, jsonify, url_for, send_from_directory
 import os
-from g_mask.eyeMask import run_human_to_giraffe  # ✅ 기린 합성 함수 (human.jpg → result.jpg 저장)
+from eyeMask import run_human_to_giraffe  # ✅ 기린 합성 함수 (human.jpg → result.jpg 저장)
 
 app = Flask(__name__)
 
