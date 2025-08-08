@@ -1,15 +1,18 @@
-import sys
-sys.path.append('C:/Users/82104/Documents/GitHub/2025AI_Giraffe/stylegan3')
+import sys, os
 
+sys.path.append(os.path.abspath('./code'))
+sys.path.append(os.path.abspath('./stylegan3'))
+
+print("[DEBUG] PYTHONPATH 설정 완료:", sys.path)
+
+from encoder.inference_utils import infer_image_to_latent
 import torch
 import numpy as np
 import PIL.Image
 from typing import List, Optional
 import dnnlib
 import legacy
-import os
 
-from encoder.inference_utils import infer_image_to_latent  # ❗ e4e 등에서 제공하는 인코딩 함수가 필요
 
 class StyleGAN3StyleMixer:
     def __init__(self, giraffe_model_path: str, human_model_path: str, device: str = 'cpu'):
@@ -27,9 +30,6 @@ class StyleGAN3StyleMixer:
         return G
 
     def encode_image_to_w(self, image_path: str) -> torch.Tensor:
-        """
-        실제 이미지 파일을 latent vector로 변환 (e4e 등 사용)
-        """
         print(f"사람 얼굴 인코딩 중: {image_path}")
         latent = infer_image_to_latent(image_path, device=self.device)
         return latent
@@ -54,7 +54,6 @@ class StyleGAN3StyleMixer:
 
         with torch.no_grad():
             img = self.giraffe_G.synthesis(w_mixed, noise_mode='const')
-
         return self._postprocess_image(img, resolution)
 
     def _postprocess_image(self, img: torch.Tensor, resolution: int) -> PIL.Image.Image:
@@ -68,26 +67,23 @@ class StyleGAN3StyleMixer:
         img.save(path)
         print(f"이미지 저장됨: {path}")
 
-
 def main():
-    giraffe_model_path = "giraffe_model.pkl"
-    human_model_path = "human_model.pkl"
-    person_image_path = "jk_test.jpg"  # ✅ 인코딩할 사람 얼굴 이미지 경로
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    giraffe_model_path = os.path.join(base_path, 'giraffe_model.pkl')
+    human_model_path = os.path.join(base_path, 'human_model.pkl')
+    person_image_path = os.path.join(base_path, 'jk_test.jpg')
+    output_image_path = os.path.join(base_path, 'giraffe_with_human_eyes.png')
 
     mixer = StyleGAN3StyleMixer(giraffe_model_path, human_model_path, device='cuda' if torch.cuda.is_available() else 'cpu')
 
-    # 1. 기린 latent: seed로 생성 (예: seed=2로 고정)
     w_giraffe = mixer.generate_w_codes(1, seed=2)
-
-    # 2. 사람 latent: 이미지 → latent vector
     w_human = mixer.encode_image_to_w(person_image_path)
 
-    # 3. 눈 부분 (style layers 6~8)만 섞기
     eye_layers = [6, 7, 8]
     mixed_img = mixer.style_mixing(w_giraffe, w_human, eye_layers)
-    mixer.save_image(mixed_img, "giraffe_with_human_eyes.png")
+    mixer.save_image(mixed_img, output_image_path)
 
-    print("혼합 완료: 기린 + 사람 눈")
+    print("🎉 혼합 완료: 기린 + 사람 눈")
 
 if __name__ == "__main__":
     main()

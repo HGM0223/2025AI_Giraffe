@@ -7,8 +7,8 @@ import os
 # === 전체 처리 함수 ===
 def run_human_to_giraffe(HUMAN_IMAGE_PATH):
     # === 파일 경로 설정 ===
-    GIRAFFE_IMAGE_PATH = 'g_mask/giraffe.jpg'
-    GIRAFFE_EYE_JSON_PATH = 'g_mask/giraffe_eye_points.json'
+    GIRAFFE_IMAGE_PATH = 'giraffe.jpg'
+    GIRAFFE_EYE_JSON_PATH = 'giraffe_eye_points.json'
 
     # === mediapipe 초기화 ===
     mp_face_mesh = mp.solutions.face_mesh
